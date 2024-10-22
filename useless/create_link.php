@@ -4,7 +4,6 @@ $token = sha1(random_int ( 0, 99999999999999999999));
 
 $query = "UPDATE users SET chmod = '".$token."' WHERE mail = '".$this->mail."'";
 
-
 // retrieve token
 if (isset($_GET["token"]) && preg_match('/^[0-9A-F]{40}$/i', $_GET["token"])) {
     $token = $_GET["token"];
