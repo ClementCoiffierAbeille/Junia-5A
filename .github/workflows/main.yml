@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: self-hosted
     name: Build Docker Image
-    needs: lint  # Ajout de la dépendance au job lint
+    needs: lint
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -34,7 +34,7 @@ jobs:
   push-dockerhub:
     runs-on: self-hosted
     name: Push to DockerHub
-    needs: build  # Ce job ne s'exécute qu'après le build
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -50,10 +50,19 @@ jobs:
   deploy:
     runs-on: self-hosted
     name: Deploy Application
-    needs: push-dockerhub  # Ce job ne s'exécute qu'après le push sur DockerHub
+    needs: push-dockerhub
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Check SSH Variables  # Étape pour vérifier les variables
+        run: |
+          echo "SSH_HOST: $SSH_HOST"
+          echo "SSH_USER: $SSH_USER"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
 
       - name: SSH to Server and Deploy
         env:
@@ -64,7 +73,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts  # Correction : Ajouter le nom de l'hôte ici
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
           ssh $SSH_USER@$SSH_HOST "
             docker pull clem33950/junia-site:latest &&
             docker-compose down &&
